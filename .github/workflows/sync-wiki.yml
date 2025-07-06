@@ -1,0 +1,61 @@
+# Name des Workflows, der in der "Actions"-Übersicht von GitHub angezeigt wird
+name: Wiki mit Ordner synchronisieren
+
+# Trigger: Wann soll dieser Workflow ausgeführt werden?
+on:
+  # Bei jedem Push zum 'main'-Branch
+  push:
+    branches:
+      - master
+    # Nur ausführen, wenn sich Dateien im "Wiki"-Ordner geändert haben
+    paths:
+      - 'Wiki/**'
+
+# Jobs, die im Workflow ausgeführt werden
+jobs:
+  # Einziger Job in diesem Workflow
+  sync-wiki-job:
+    # Auf dem neuesten Ubuntu-Runner ausführen
+    runs-on: ubuntu-latest
+
+    # Schritte, die der Job ausführt
+    steps:
+      # Schritt 1: Das Haupt-Repository auschecken (damit wir Zugriff auf den "Wiki"-Ordner haben)
+      - name: Haupt-Repository auschecken
+        uses: actions/checkout@v4
+
+      # Schritt 2: Das Wiki-Repository auschecken
+      # Es wird in einen separaten Ordner namens 'wiki-repo' geklont
+      - name: Wiki-Repository auschecken
+        uses: actions/checkout@v4
+        with:
+          # Name des Wiki-Repositories (ersetze DEIN-BENUTZERNAME/DEIN-REPO)
+          repository: ${{ github.repository }}.wiki
+          # In den Unterordner 'wiki-repo' klonen
+          path: wiki-repo
+
+      # Schritt 3: Inhalte vom Ordner ins Wiki-Repository kopieren
+      # Löscht alte Dateien im Wiki-Repo und kopiert die neuen
+      - name: Inhalte synchronisieren
+        run: |
+          # Lösche alles im Wiki-Repo-Ordner, außer dem .git-Ordner selbst
+          find wiki-repo -mindepth 1 -not -path 'wiki-repo/.git/*' -delete
+          # Kopiere den Inhalt deines "Wiki"-Ordners in den Wiki-Repo-Ordner
+          cp -r Wiki/* wiki-repo/
+
+      # Schritt 4: Änderungen im Wiki-Repository comitten und pushen
+      - name: Änderungen comitten und pushen
+        run: |
+          cd wiki-repo
+          # Git-Benutzer für diesen Commit konfigurieren
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          # Alle Änderungen hinzufügen (neue, geänderte, gelöschte Dateien)
+          git add .
+          # Committen, falls es Änderungen gibt
+          if ! git diff --staged --quiet; then
+            git commit -m "Docs: Wiki automatisch synchronisiert"
+            git push
+          else
+            echo "Keine Änderungen zum Pushen im Wiki."
+          fi
