@@ -6,11 +6,14 @@ import 'package:tracker/models/note.dart';
 import 'package:tracker/services/note_service.dart';
 import 'package:tracker/note_edit_page.dart';
 import 'package:tracker/note_read_page.dart';
+import 'package:tracker/habit_page.dart';
+import 'package:tracker/services/habit_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await DatabaseService().init();
   await NoteService().init();
+  await HabitService().init();
   runApp(const MyApp());
 }
 
@@ -596,13 +599,81 @@ class _NotizenPageState extends State<NotizenPage> {
   }
 }
 
-class GewohnheitenPage extends StatelessWidget {
+class GewohnheitenPage extends StatefulWidget {
   const GewohnheitenPage({super.key});
 
   @override
+  State<GewohnheitenPage> createState() => _GewohnheitenPageState();
+}
+
+class _GewohnheitenPageState extends State<GewohnheitenPage> {
+  final HabitService _habitService = HabitService();
+  List<Habit> _habits = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHabits();
+  }
+
+  void _loadHabits() {
+    setState(() {
+      _habits = _habitService.getHabits();
+    });
+  }
+
+  void _navigateToEditPage([Habit? habit]) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => HabitEditPage(habit: habit),
+      ),
+    );
+    _loadHabits();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Gewohnheiten'),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Gewohnheiten'),
+      ),
+      body: ListView.builder(
+        itemCount: _habits.length,
+        itemBuilder: (context, index) {
+          final habit = _habits[index];
+          return ListTile(
+            title: Text(habit.description),
+            subtitle: Text('Streak: ${habit.counterStreak} | Level: ${habit.counterLevel}'),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.AxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.check),
+                  onPressed: () async {
+                    await _habitService.checkOffHabit(habit.id);
+                    _loadHabits();
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: () => _navigateToEditPage(habit),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () async {
+                    await _habitService.deleteHabit(habit.id);
+                    _loadHabits();
+                  },
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _navigateToEditPage(),
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }
