@@ -18,6 +18,9 @@ jobs:
     # Auf dem neuesten Ubuntu-Runner ausführen
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     # Schritte, die der Job ausführt
     steps:
       # Schritt 1: Das Haupt-Repository auschecken (damit wir Zugriff auf den "Wiki"-Ordner haben)
