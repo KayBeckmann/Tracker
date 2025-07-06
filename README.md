@@ -8,6 +8,7 @@ Eine plattformübergreifende Produktivitäts-App, die mit Flutter und Dart entwi
 -   **Notizen:** Erstellen und verwalten Sie Notizen mit Markdown-Unterstützung und Tags.
 -   **Gewohnheiten:** Verfolgen und verwalten Sie Ihre Gewohnheiten mit Streak- und Level-Systemen.
 -   **Dashboard:** Eine Übersicht über Ihre Aufgaben, Notizen und Gewohnheiten.
+-   **Einstellungen:** Personalisieren Sie das Erscheinungsbild (Light/Dark/System Theme) und die Sprache (Deutsch/Englisch) der App.
 
 ## Erste Schritte
 
