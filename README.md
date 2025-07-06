@@ -6,7 +6,8 @@ Eine plattformübergreifende Produktivitäts-App, die mit Flutter und Dart entwi
 
 -   **Aufgabenverwaltung:** Erfassen, bearbeiten und löschen Sie Aufgaben mit Fälligkeitsdaten und Prioritäten.
 -   **Notizen:** Erstellen und verwalten Sie Notizen mit Markdown-Unterstützung und Tags.
--   **Dashboard:** Eine Übersicht über Ihre Aufgaben und Notizen.
+-   **Gewohnheiten:** Verfolgen und verwalten Sie Ihre Gewohnheiten mit Streak- und Level-Systemen.
+-   **Dashboard:** Eine Übersicht über Ihre Aufgaben, Notizen und Gewohnheiten.
 
 ## Erste Schritte
 

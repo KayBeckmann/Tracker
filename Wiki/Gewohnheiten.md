@@ -4,8 +4,8 @@ Diese Seite ist für die Verwaltung von Gewohnheiten vorgesehen.
 
 ## Aufbau
 
-Aktuell ist diese Seite ein Platzhalter und zeigt lediglich den Text "Gewohnheiten" an.
+Die Seite zeigt eine Liste aller Gewohnheiten an. Jede Gewohnheit wird mit ihrer Beschreibung, dem aktuellen Streak (Anzahl der aufeinanderfolgenden Tage, an denen die Gewohnheit abgehakt wurde) und dem Level angezeigt. Für jede Gewohnheit gibt es Buttons zum Abhaken, Bearbeiten und Löschen. Ein "+"-Button (Floating Action Button) ermöglicht das Hinzufügen neuer Gewohnheiten.
 
 ## Funktionsweise
 
-In zukünftigen Versionen soll hier die Funktionalität zur Erfassung, Verfolgung und Analyse von Gewohnheiten implementiert werden.
+Gewohnheiten werden über den `HabitService` verwaltet. Beim Abhaken einer Gewohnheit wird der Streak aktualisiert. Wenn eine Gewohnheit an einem Tag nicht abgehakt wird, wird der Streak auf 0 zurückgesetzt. Alle 7 Streaks erhöht sich das Level um 1. Wenn der Streak auf 0 gesetzt wird, verringert sich das Level um 1 (nicht kleiner als 0). Die Bearbeitung und das Hinzufügen neuer Gewohnheiten erfolgt über die `HabitEditPage`.
