@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'package:flutter/foundation.dart';
 
 part 'theme_service.g.dart';
 
@@ -15,6 +16,8 @@ enum AppTheme {
 class ThemeService {
   static final ThemeService _instance = ThemeService._internal();
   late Box<AppTheme> _themeBox;
+
+  ValueListenable<Box<AppTheme>> get themeBox => _themeBox.listenable();
 
   factory ThemeService() {
     return _instance;

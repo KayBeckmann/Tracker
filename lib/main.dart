@@ -11,6 +11,10 @@ import 'package:tracker/services/habit_service.dart';
 import 'package:tracker/models/habit.dart';
 import 'package:hive/hive.dart';
 import 'package:tracker/hive_adapters.dart';
+import 'package:tracker/services/theme_service.dart';
+import 'package:tracker/services/localization_service.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tracker/settings/settings_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,21 +22,101 @@ void main() async {
   await DatabaseService().init();
   await NoteService().init();
   await HabitService().init();
+  await ThemeService().init();
+  await LocalizationService().init();
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final ThemeService _themeService = ThemeService();
+  final LocalizationService _localizationService = LocalizationService();
+
+  @override
+  void initState() {
+    super.initState();
+    _themeService.themeBox.listenable().addListener(() => setState(() {}));
+    _localizationService.localeBox.listenable().addListener(() => setState(() {}));
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final currentTheme = _themeService.getTheme();
+    final currentLocale = _localizationService.getLocale();
+
     return MaterialApp(
       title: 'Tracker',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        brightness: currentTheme == AppTheme.dark ? Brightness.dark : Brightness.light,
       ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+        brightness: Brightness.dark,
+      ),
+      themeMode: currentTheme == AppTheme.system
+          ? ThemeMode.system
+          : (currentTheme == AppTheme.light ? ThemeMode.light : ThemeMode.dark),
+      locale: currentLocale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: const HomePage(),
+    );
+  }
+}
+
+class _MyAppState extends State<MyApp> {
+  final ThemeService _themeService = ThemeService();
+  final LocalizationService _localizationService = LocalizationService();
+
+  @override
+  void initState() {
+    super.initState();
+    _themeService.getTheme().then((theme) => setState(() {}));
+    _localizationService.getLocale().then((locale) => setState(() {}));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<Box<AppTheme>>(
+      valueListenable: _themeService.themeBox.listenable(),
+      builder: (context, box, child) {
+        final currentTheme = _themeService.getTheme();
+        return ValueListenableBuilder<Box<Locale>>(
+          valueListenable: _localizationService.localeBox.listenable(),
+          builder: (context, box, child) {
+            final currentLocale = _localizationService.getLocale();
+            return MaterialApp(
+              title: 'Tracker',
+              theme: ThemeData(
+                colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+                useMaterial3: true,
+                brightness: currentTheme == AppTheme.dark ? Brightness.dark : Brightness.light,
+              ),
+              darkTheme: ThemeData(
+                colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+                useMaterial3: true,
+                brightness: Brightness.dark,
+              ),
+              themeMode: currentTheme == AppTheme.system
+                  ? ThemeMode.system
+                  : (currentTheme == AppTheme.light ? ThemeMode.light : ThemeMode.dark),
+              locale: currentLocale,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const HomePage(),
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -53,7 +137,7 @@ class _HomePageState extends State<HomePage> {
     NotizenPage(),
     GewohnheitenPage(),
     HaushaltsbuchPage(),
-    EinstellungenPage(),
+    SettingsPage(),
   ];
 
   void _onItemTapped(int index) {

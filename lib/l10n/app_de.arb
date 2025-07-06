@@ -1,4 +1,10 @@
 {
     "@@locale": "de",
-    "appTitle": "Tracker"
+    "appTitle": "Tracker",
+    "settings": "Einstellungen",
+    "theme": "Theme",
+    "language": "Sprache",
+    "backendLogin": "Backend Login",
+    "backendLoginMessage": "Die Backend-Login-Funktionalität wird in Kürze implementiert.",
+    "login": "Login"
 }
