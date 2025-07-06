@@ -14,14 +14,36 @@ class NoteEditPage extends StatefulWidget {
 class _NoteEditPageState extends State<NoteEditPage> {
   final _formKey = GlobalKey<FormState>();
   final _textController = TextEditingController();
-  final _tagsController = TextEditingController();
+  final _newTagController = TextEditingController();
+  final NoteService _noteService = NoteService();
+
+  Set<String> _selectedTags = {};
+  List<String> _allAvailableTags = [];
 
   @override
   void initState() {
     super.initState();
     if (widget.note != null) {
       _textController.text = widget.note!.text;
-      _tagsController.text = widget.note!.tags.join(', ');
+      _selectedTags = widget.note!.tags.toSet();
+    }
+    _loadAllTags();
+  }
+
+  void _loadAllTags() {
+    setState(() {
+      _allAvailableTags = _noteService.getNotes().expand((note) => note.tags).toSet().toList();
+    });
+  }
+
+  void _addNewTag() {
+    final newTag = _newTagController.text.trim();
+    if (newTag.isNotEmpty && !_allAvailableTags.contains(newTag)) {
+      setState(() {
+        _allAvailableTags.add(newTag);
+        _selectedTags.add(newTag);
+        _newTagController.clear();
+      });
     }
   }
 
@@ -49,30 +71,55 @@ class _NoteEditPageState extends State<NoteEditPage> {
                 },
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _tagsController,
-                decoration: const InputDecoration(labelText: 'Tags (kommagetrennt)'),
+              const Text('Vorhandene Tags:'),
+              Wrap(
+                spacing: 8.0,
+                children: _allAvailableTags.map((tag) {
+                  return ChoiceChip(
+                    label: Text(tag),
+                    selected: _selectedTags.contains(tag),
+                    onSelected: (selected) {
+                      setState(() {
+                        if (selected) {
+                          _selectedTags.add(tag);
+                        } else {
+                          _selectedTags.remove(tag);
+                        }
+                      });
+                    },
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _newTagController,
+                      decoration: const InputDecoration(labelText: 'Neuen Tag hinzufügen'),
+                      onFieldSubmitted: (value) => _addNewTag(),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.add),
+                    onPressed: _addNewTag,
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    final tags = _tagsController.text
-                        .split(',')
-                        .map((e) => e.trim())
-                        .where((e) => e.isNotEmpty)
-                        .toList();
-
                     final newOrUpdatedNote = Note(
                       id: widget.note?.id,
                       text: _textController.text,
-                      tags: tags,
+                      tags: _selectedTags.toList(),
                     );
 
                     if (widget.note == null) {
-                      NoteService().addNote(newOrUpdatedNote);
+                      _noteService.addNote(newOrUpdatedNote);
                     } else {
-                      NoteService().updateNote(newOrUpdatedNote);
+                      _noteService.updateNote(newOrUpdatedNote);
                     }
                     Navigator.of(context).pop();
                   }

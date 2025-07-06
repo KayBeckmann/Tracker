@@ -40,7 +40,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
-  static const List<Widget> _widgetOptions = <Widget>[
+  static List<Widget> _widgetOptions = <Widget>[
     DashboardPage(),
     AufgabenPage(),
     NotizenPage(),
@@ -163,17 +163,20 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   final DatabaseService _dbService = DatabaseService();
+  final NoteService _noteService = NoteService();
   List<Task> _tasks = [];
+  List<Note> _notes = [];
 
   @override
   void initState() {
     super.initState();
-    _loadTasks();
+    _loadData();
   }
 
-  void _loadTasks() {
+  void _loadData() {
     setState(() {
       _tasks = _dbService.getTasks();
+      _notes = _noteService.getNotes();
     });
   }
 
@@ -190,6 +193,16 @@ class _DashboardPageState extends State<DashboardPage> {
         nextDueTask = openTasks.first;
       }
     }
+
+    final totalNotes = _notes.length;
+    final allTags = _notes.expand((note) => note.tags).toList();
+    final tagCounts = <String, int>{};
+    for (var tag in allTags) {
+      tagCounts[tag] = (tagCounts[tag] ?? 0) + 1;
+    }
+    final top3Tags = tagCounts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final top3TagNames = top3Tags.take(3).map((entry) => entry.key).toList();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
@@ -243,7 +256,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                   setState(() {
                                     nextDueTask!.isCompleted = true;
                                     _dbService.updateTask(nextDueTask);
-                                    _loadTasks();
+                                    _loadData();
                                   });
                                 },
                                 child: const Text('Als erledigt markieren'),
@@ -252,6 +265,53 @@ class _DashboardPageState extends State<DashboardPage> {
                           )
                         else
                           const Text('Keine offenen Aufgaben.'),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Notizenübersicht',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        Text('Gesamtzahl der Notizen: $totalNotes'),
+                        const SizedBox(height: 8),
+                        const Text('Häufigste Tags:'),
+                        if (top3TagNames.isNotEmpty)
+                          Wrap(
+                            spacing: 8.0,
+                            children: top3TagNames.map((tag) => ActionChip(
+                              label: Text(tag),
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => NotizenPage(selectedTag: tag),
+                                  ),
+                                );
+                                // Also switch to the Notizen tab
+                                final homePageState = context.findAncestorStateOfType<_HomePageState>();
+                                homePageState?.setState(() {
+                                  homePageState._selectedIndex = 2; // Index for NotizenPage
+                                });
+                              },
+                            )).toList(),
+                          )
+                        else
+                          const Text('Keine Tags vorhanden.'),
                       ],
                     ),
                   ),
@@ -403,7 +463,8 @@ class _AufgabenPageState extends State<AufgabenPage> {
 }
 
 class NotizenPage extends StatefulWidget {
-  const NotizenPage({super.key});
+  final String? selectedTag;
+  const NotizenPage({super.key, this.selectedTag});
 
   @override
   State<NotizenPage> createState() => _NotizenPageState();
@@ -417,7 +478,17 @@ class _NotizenPageState extends State<NotizenPage> {
   @override
   void initState() {
     super.initState();
+    _selectedTag = widget.selectedTag;
     _loadNotes();
+  }
+
+  @override
+  void didUpdateWidget(covariant NotizenPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedTag != oldWidget.selectedTag) {
+      _selectedTag = widget.selectedTag;
+      _loadNotes();
+    }
   }
 
   void _loadNotes() {
