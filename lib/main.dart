@@ -171,8 +171,10 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   final DatabaseService _dbService = DatabaseService();
   final NoteService _noteService = NoteService();
+  final HabitService _habitService = HabitService();
   List<Task> _tasks = [];
   List<Note> _notes = [];
+  List<Habit> _habits = [];
 
   @override
   void initState() {
@@ -184,6 +186,7 @@ class _DashboardPageState extends State<DashboardPage> {
     setState(() {
       _tasks = _dbService.getTasks();
       _notes = _noteService.getNotes();
+      _habits = _habitService.getHabits();
     });
   }
 
@@ -319,6 +322,51 @@ class _DashboardPageState extends State<DashboardPage> {
                           )
                         else
                           const Text('Keine Tags vorhanden.'),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Gewohnheiten',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        if (_habits.isNotEmpty)
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: _habits.map((habit) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text('${habit.description} (Level: ${habit.counterLevel}, Streak: ${habit.counterStreak})'),
+                                  IconButton(
+                                    icon: const Icon(Icons.check_box_outline_blank),
+                                    onPressed: () async {
+                                      await _habitService.checkOffHabit(habit.id);
+                                      _loadData(); // Reload data to update UI
+                                    },
+                                  ),
+                                ],
+                              ),
+                            )).toList(),
+                          )
+                        else
+                          const Text('Keine Gewohnheiten vorhanden.'),
                       ],
                     ),
                   ),
