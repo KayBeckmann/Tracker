@@ -36,4 +36,12 @@ class Habit extends HiveObject {
 
   factory Habit.fromJson(Map<String, dynamic> json) => _$HabitFromJson(json);
   Map<String, dynamic> toJson() => _$HabitToJson(this);
+
+  bool get isCheckedOffToday {
+    if (lastCheckedOffDate == null) return false;
+    final now = DateTime.now();
+    return lastCheckedOffDate!.year == now.year &&
+        lastCheckedOffDate!.month == now.month &&
+        lastCheckedOffDate!.day == now.day;
+  }
 }
