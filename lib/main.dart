@@ -149,13 +149,113 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
   @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  final DatabaseService _dbService = DatabaseService();
+  List<Task> _tasks = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTasks();
+  }
+
+  void _loadTasks() {
+    setState(() {
+      _tasks = _dbService.getTasks();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Dashboard'),
+    final totalTasks = _tasks.length;
+    final highPriorityTasks = _tasks.where((task) => task.priority == Priority.hoch && !task.isCompleted).length;
+
+    Task? nextDueTask;
+    if (_tasks.isNotEmpty) {
+      final openTasks = _tasks.where((task) => !task.isCompleted).toList();
+      if (openTasks.isNotEmpty) {
+        openTasks.sort((a, b) => a.dueDate.compareTo(b.dueDate));
+        nextDueTask = openTasks.first;
+      }
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Aufgabenübersicht',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        Text('Gesamtzahl der Aufgaben: $totalTasks'),
+                        Text('Aufgaben mit hoher Priorität: $highPriorityTasks'),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Nächste fällige Aufgabe',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        if (nextDueTask != null)
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Beschreibung: ${nextDueTask.description}'),
+                              Text('Fälligkeit: ${nextDueTask.dueDate.toLocal().toString().split(' ')[0]}'),
+                              Text('Priorität: ${nextDueTask.priority.toString().split('.').last}'),
+                              const SizedBox(height: 8),
+                              ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    nextDueTask!.isCompleted = true;
+                                    _dbService.updateTask(nextDueTask);
+                                    _loadTasks();
+                                  });
+                                },
+                                child: const Text('Als erledigt markieren'),
+                              ),
+                            ],
+                          )
+                        else
+                          const Text('Keine offenen Aufgaben.'),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
