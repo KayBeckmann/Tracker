@@ -1,16 +1,43 @@
-# tracker
+# Tracker App
 
-A new Flutter project.
+Eine plattformübergreifende Produktivitäts-App, die mit Flutter und Dart entwickelt wurde. Sie hilft Ihnen, Aufgaben, Notizen, Gewohnheiten und Finanzen zu verwalten.
 
-## Getting Started
+## Funktionen
 
-This project is a starting point for a Flutter application.
+-   **Aufgabenverwaltung:** Erfassen, bearbeiten und löschen Sie Aufgaben mit Fälligkeitsdaten und Prioritäten.
+-   **Notizen:** Erstellen und verwalten Sie Notizen mit Markdown-Unterstützung und Tags.
+-   **Dashboard:** Eine Übersicht über Ihre Aufgaben und Notizen.
 
-A few resources to get you started if this is your first Flutter project:
+## Erste Schritte
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Voraussetzungen
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+-   [Flutter SDK](https://flutter.dev/docs/get-started/install) installiert und konfiguriert.
+
+### Installation
+
+1.  Klonen Sie das Repository:
+    ```bash
+    git clone <repository-url>
+    cd tracker
+    ```
+2.  Abhängigkeiten installieren:
+    ```bash
+    flutter pub get
+    ```
+3.  Generieren Sie die Hive-Adapter:
+    ```bash
+    flutter pub run build_runner build --delete-conflicting-outputs
+    ```
+
+### App starten
+
+```bash
+flutter run
+```
+
+## Projektstruktur
+
+-   `lib/models/`: Datenmodelle (z.B. Task, Note).
+-   `lib/services/`: Dienste für die Datenbankinteraktion.
+-   `lib/`: UI-Seiten und Hauptanwendungslogik.
