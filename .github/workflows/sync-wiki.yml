@@ -39,9 +39,7 @@ jobs:
       - name: Inhalte synchronisieren
         run: |
           # Lösche alles im Wiki-Repo-Ordner, außer dem .git-Ordner selbst
-          find wiki-repo -mindepth 1 -not -path 'wiki-repo/.git/*' -delete
-          # Kopiere den Inhalt deines "Wiki"-Ordners in den Wiki-Repo-Ordner
-          cp -r Wiki/* wiki-repo/
+          rsync -av --delete --exclude='.git' Wiki/ wiki-repo/
 
       # Schritt 4: Änderungen im Wiki-Repository comitten und pushen
       - name: Änderungen comitten und pushen
