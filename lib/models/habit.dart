@@ -5,7 +5,7 @@ import 'package:uuid/uuid.dart';
 part 'habit.g.dart';
 
 @JsonSerializable()
-@HiveType(typeId: 2) // Use a unique typeId for Habit
+@HiveType(typeId: 4) // Use a unique typeId for Habit
 class Habit extends HiveObject {
   @HiveField(0)
   final String id;

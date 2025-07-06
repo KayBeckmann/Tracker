@@ -104,16 +104,24 @@ class _HabitEditPageState extends State<HabitEditPage> {
   void _saveHabit() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
+      print('HabitEditPage: Form validation successful.');
+      print('HabitEditPage: Attempting to save habit...');
       if (widget.habit == null) {
         // Add new habit
         final newHabit = Habit(description: _description);
+        print('HabitEditPage: Adding new habit: ${newHabit.description}');
         await _habitService.addHabit(newHabit);
+        print('HabitEditPage: New habit added.');
       } else {
         // Update existing habit
         widget.habit!.description = _description;
+        print('HabitEditPage: Updating habit: ${widget.habit!.description}');
         await _habitService.updateHabit(widget.habit!);
+        print('HabitEditPage: Habit updated.');
       }
       Navigator.of(context).pop();
+    } else {
+      print('HabitEditPage: Form validation failed.');
     }
   }
 

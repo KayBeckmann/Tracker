@@ -8,7 +8,7 @@ part of 'habit.dart';
 
 class HabitAdapter extends TypeAdapter<Habit> {
   @override
-  final int typeId = 2;
+  final int typeId = 4;
 
   @override
   Habit read(BinaryReader reader) {
@@ -54,3 +54,27 @@ class HabitAdapter extends TypeAdapter<Habit> {
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+Habit _$HabitFromJson(Map<String, dynamic> json) => Habit(
+      id: json['id'] as String?,
+      description: json['description'] as String,
+      counterStreak: (json['counterStreak'] as num?)?.toInt() ?? 0,
+      counterLevel: (json['counterLevel'] as num?)?.toInt() ?? 0,
+      lastCheckedOffDate: json['lastCheckedOffDate'] == null
+          ? null
+          : DateTime.parse(json['lastCheckedOffDate'] as String),
+      isArchived: json['isArchived'] as bool? ?? false,
+    );
+
+Map<String, dynamic> _$HabitToJson(Habit instance) => <String, dynamic>{
+      'id': instance.id,
+      'description': instance.description,
+      'counterStreak': instance.counterStreak,
+      'counterLevel': instance.counterLevel,
+      'lastCheckedOffDate': instance.lastCheckedOffDate?.toIso8601String(),
+      'isArchived': instance.isArchived,
+    };

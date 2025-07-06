@@ -13,9 +13,6 @@ class HabitService {
   HabitService._internal();
 
   Future<void> init() async {
-    if (!Hive.isAdapterRegistered(2)) {
-      Hive.registerAdapter(HabitAdapter());
-    }
     _habitBox = await Hive.openBox<Habit>('habits');
   }
 
@@ -28,7 +25,9 @@ class HabitService {
   }
 
   Future<void> addHabit(Habit habit) async {
+    print('HabitService: Adding habit with ID: ${habit.id} and description: ${habit.description}');
     await _habitBox.put(habit.id, habit);
+    print('HabitService: Habit added to box. Box length: ${_habitBox.length}');
   }
 
   Future<void> updateHabit(Habit habit) async {

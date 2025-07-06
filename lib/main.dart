@@ -8,9 +8,13 @@ import 'package:tracker/note_edit_page.dart';
 import 'package:tracker/note_read_page.dart';
 import 'package:tracker/habit_page.dart';
 import 'package:tracker/services/habit_service.dart';
+import 'package:tracker/models/habit.dart';
+import 'package:hive/hive.dart';
+import 'package:tracker/hive_adapters.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  registerHiveAdapters(); // Register all Hive adapters
   await DatabaseService().init();
   await NoteService().init();
   await HabitService().init();
@@ -645,7 +649,7 @@ class _GewohnheitenPageState extends State<GewohnheitenPage> {
             title: Text(habit.description),
             subtitle: Text('Streak: ${habit.counterStreak} | Level: ${habit.counterLevel}'),
             trailing: Row(
-              mainAxisSize: MainAxisSize.AxisSize.min,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
                   icon: const Icon(Icons.check),
