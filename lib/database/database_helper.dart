@@ -23,7 +23,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -62,6 +62,19 @@ class DatabaseHelper {
         FOREIGN KEY (categoryId) REFERENCES categories(id)
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE transaction_templates(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        description TEXT NOT NULL,
+        amount REAL NOT NULL,
+        type INTEGER NOT NULL,
+        accountId INTEGER,
+        categoryId INTEGER,
+        FOREIGN KEY (accountId) REFERENCES accounts(id),
+        FOREIGN KEY (categoryId) REFERENCES categories(id)
+      )
+    ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -75,6 +88,20 @@ class DatabaseHelper {
     if (oldVersion < 4) {
       await db.execute('ALTER TABLE categories ADD COLUMN type INTEGER NOT NULL DEFAULT 0');
       await db.execute('ALTER TABLE categories ADD COLUMN defaultAccountId INTEGER');
+    }
+    if (oldVersion < 5) {
+      await db.execute('''
+        CREATE TABLE transaction_templates(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          description TEXT NOT NULL,
+          amount REAL NOT NULL,
+          type INTEGER NOT NULL,
+          accountId INTEGER,
+          categoryId INTEGER,
+          FOREIGN KEY (accountId) REFERENCES accounts(id),
+          FOREIGN KEY (categoryId) REFERENCES categories(id)
+        )
+      ''');
     }
   }
 }
