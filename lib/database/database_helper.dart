@@ -23,7 +23,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -43,7 +43,10 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE categories(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL
+        name TEXT NOT NULL,
+        type INTEGER NOT NULL,
+        defaultAccountId INTEGER,
+        FOREIGN KEY (defaultAccountId) REFERENCES accounts(id)
       )
     ''');
 
@@ -68,6 +71,10 @@ class DatabaseHelper {
     }
     if (oldVersion < 3) {
       await db.execute('ALTER TABLE accounts ADD COLUMN isDefault INTEGER NOT NULL DEFAULT 0');
+    }
+    if (oldVersion < 4) {
+      await db.execute('ALTER TABLE categories ADD COLUMN type INTEGER NOT NULL DEFAULT 0');
+      await db.execute('ALTER TABLE categories ADD COLUMN defaultAccountId INTEGER');
     }
   }
 }
