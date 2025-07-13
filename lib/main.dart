@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:tracker/aufgabe_page.dart';
 import 'package:tracker/dashboard_page.dart';
 import 'package:tracker/habit_page.dart';
-import 'package:tracker/haushaltsbuch_page.dart';
+import 'package:tracker/haushaltsbuch/haushaltsbuch_page.dart';
 import 'package:tracker/notizen_page.dart';
 import 'package:tracker/models/task.dart';
 import 'package:tracker/services/database_service.dart';
