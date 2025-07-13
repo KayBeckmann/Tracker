@@ -1,12 +1,13 @@
-import 'package:tracker/haushaltsbuch/category_model.dart';
+import 'package:tracker/haushaltsbuch/transaction_type.dart';
 
 class TransactionTemplate {
   int? id;
   String description;
   double amount;
-  CategoryType type;
+  TransactionType type;
   int? accountId;
   int? categoryId;
+  int? targetAccountId;
 
   TransactionTemplate({
     this.id,
@@ -15,6 +16,7 @@ class TransactionTemplate {
     required this.type,
     this.accountId,
     this.categoryId,
+    this.targetAccountId,
   });
 
   Map<String, dynamic> toMap() {
@@ -25,6 +27,7 @@ class TransactionTemplate {
       'type': type.index,
       'accountId': accountId,
       'categoryId': categoryId,
+      'targetAccountId': targetAccountId,
     };
   }
 
@@ -33,9 +36,10 @@ class TransactionTemplate {
       id: map['id'],
       description: map['description'],
       amount: map['amount'],
-      type: CategoryType.values[map['type']],
+      type: TransactionType.values[map['type']],
       accountId: map['accountId'],
       categoryId: map['categoryId'],
+      targetAccountId: map['targetAccountId'],
     );
   }
 }

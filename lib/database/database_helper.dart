@@ -23,7 +23,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 5,
+      version: 6,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -58,8 +58,11 @@ class DatabaseHelper {
         date TEXT NOT NULL,
         accountId INTEGER NOT NULL,
         categoryId INTEGER NOT NULL,
+        type INTEGER NOT NULL DEFAULT 0,
+        targetAccountId INTEGER,
         FOREIGN KEY (accountId) REFERENCES accounts(id),
-        FOREIGN KEY (categoryId) REFERENCES categories(id)
+        FOREIGN KEY (categoryId) REFERENCES categories(id),
+        FOREIGN KEY (targetAccountId) REFERENCES accounts(id)
       )
     ''');
 
@@ -102,6 +105,10 @@ class DatabaseHelper {
           FOREIGN KEY (categoryId) REFERENCES categories(id)
         )
       ''');
+    }
+    if (oldVersion < 6) {
+      await db.execute('ALTER TABLE transactions ADD COLUMN type INTEGER NOT NULL DEFAULT 0');
+      await db.execute('ALTER TABLE transactions ADD COLUMN targetAccountId INTEGER');
     }
   }
 }

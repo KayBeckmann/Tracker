@@ -7,6 +7,7 @@ import 'package:tracker/haushaltsbuch/transaction_model.dart';
 import 'package:tracker/haushaltsbuch/transaction_service.dart';
 import 'package:tracker/haushaltsbuch/transaction_template_model.dart';
 import 'package:tracker/haushaltsbuch/transaction_template_service.dart';
+import 'package:tracker/haushaltsbuch/transaction_type.dart';
 
 class NewTransactionPage extends StatefulWidget {
   final Transaction? transaction;
@@ -24,7 +25,8 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
   DateTime _selectedDate = DateTime.now();
   Account? _selectedAccount;
   Category? _selectedCategory;
-  CategoryType _transactionType = CategoryType.expense; // Default to expense
+  TransactionType _transactionType = TransactionType.expense; // Default to expense
+  Account? _targetAccount; // For transfers
 
   final AccountService _accountService = AccountService();
   final CategoryService _categoryService = CategoryService();
@@ -42,6 +44,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
       _descriptionController.text = widget.transaction!.description;
       _amountController.text = widget.transaction!.amount.toString();
       _selectedDate = widget.transaction!.date;
+      _transactionType = widget.transaction!.type;
     }
     _loadData();
   }
@@ -54,7 +57,8 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
     if (widget.transaction != null) {
       _selectedAccount = _accounts.firstWhereOrNull((acc) => acc.id == widget.transaction!.accountId);
       _selectedCategory = _categories.firstWhereOrNull((cat) => cat.id == widget.transaction!.categoryId);
-      _transactionType = _selectedCategory?.type ?? CategoryType.expense;
+      _transactionType = widget.transaction!.type;
+      _targetAccount = _accounts.firstWhereOrNull((acc) => acc.id == widget.transaction!.targetAccountId);
     } else {
       // Set default account if available and ensure it's from the loaded list
       final defaultAccount = await _accountService.getDefaultAccount();
@@ -88,9 +92,15 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
         );
         return;
       }
-      if (_selectedCategory == null) {
+      if (_transactionType != TransactionType.transfer && _selectedCategory == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Bitte wählen Sie eine Kategorie aus.')),
+        );
+        return;
+      }
+      if (_transactionType == TransactionType.transfer && _targetAccount == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Bitte wählen Sie ein Zielkonto aus.')),
         );
         return;
       }
@@ -101,7 +111,9 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
           amount: double.parse(_amountController.text),
           date: _selectedDate,
           accountId: _selectedAccount!.id!,
-          categoryId: _selectedCategory!.id!,
+          categoryId: _selectedCategory?.id ?? 0, // Provide a default value for categoryId
+          type: _transactionType,
+          targetAccountId: _targetAccount?.id,
         );
         await _transactionService.createTransaction(newTransaction);
       } else {
@@ -111,7 +123,9 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
           amount: double.parse(_amountController.text),
           date: _selectedDate,
           accountId: _selectedAccount!.id!,
-          categoryId: _selectedCategory!.id!,
+          categoryId: _selectedCategory?.id ?? 0, // Provide a default value for categoryId
+          type: _transactionType,
+          targetAccountId: _targetAccount?.id,
         );
         await _transactionService.updateTransaction(updatedTransaction);
       }
@@ -127,9 +141,15 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
         );
         return;
       }
-      if (_selectedCategory == null) {
+      if (_transactionType != TransactionType.transfer && _selectedCategory == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Bitte wählen Sie eine Kategorie aus.')),
+        );
+        return;
+      }
+      if (_transactionType == TransactionType.transfer && _targetAccount == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Bitte wählen Sie ein Zielkonto aus.')),
         );
         return;
       }
@@ -139,7 +159,8 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
         amount: double.parse(_amountController.text),
         type: _transactionType,
         accountId: _selectedAccount!.id!,
-        categoryId: _selectedCategory!.id!,
+        categoryId: _selectedCategory?.id,
+        targetAccountId: _targetAccount?.id,
       );
 
       await _templateService.createTemplate(newTemplate);
@@ -154,13 +175,14 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
       _transactionType = template.type;
       _selectedAccount = _accounts.firstWhereOrNull((acc) => acc.id == template.accountId);
       _selectedCategory = _categories.firstWhereOrNull((cat) => cat.id == template.categoryId);
+      _targetAccount = _accounts.firstWhereOrNull((acc) => acc.id == template.targetAccountId);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final filteredCategories = _categories
-        .where((cat) => cat.type == _transactionType)
+        .where((cat) => cat.type == (_transactionType == TransactionType.income ? CategoryType.income : CategoryType.expense))
         .toList();
 
     return Scaffold(
@@ -197,24 +219,39 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
               Row(
                 children: [
                   Expanded(
-                    child: RadioListTile<CategoryType>(
+                    child: RadioListTile<TransactionType>(
                       title: const Text('Einnahme'),
-                      value: CategoryType.income,
+                      value: TransactionType.income,
                       groupValue: _transactionType,
-                      onChanged: (CategoryType? value) {
+                      onChanged: (TransactionType? value) {
                         setState(() {
                           _transactionType = value!;
                           _selectedCategory = null; // Reset category on type change
+                          _targetAccount = null; // Reset target account on type change
                         });
                       },
                     ),
                   ),
                   Expanded(
-                    child: RadioListTile<CategoryType>(
+                    child: RadioListTile<TransactionType>(
                       title: const Text('Ausgabe'),
-                      value: CategoryType.expense,
+                      value: TransactionType.expense,
                       groupValue: _transactionType,
-                      onChanged: (CategoryType? value) {
+                      onChanged: (TransactionType? value) {
+                        setState(() {
+                          _transactionType = value!;
+                          _selectedCategory = null; // Reset category on type change
+                          _targetAccount = null; // Reset target account on type change
+                        });
+                      },
+                    ),
+                  ),
+                  Expanded(
+                    child: RadioListTile<TransactionType>(
+                      title: const Text('Umbuchung'),
+                      value: TransactionType.transfer,
+                      groupValue: _transactionType,
+                      onChanged: (TransactionType? value) {
                         setState(() {
                           _transactionType = value!;
                           _selectedCategory = null; // Reset category on type change
@@ -253,51 +290,96 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
                 trailing: const Icon(Icons.calendar_today),
                 onTap: () => _selectDate(context),
               ),
-              DropdownButtonFormField<Account>(
-                value: _selectedAccount,
-                decoration: const InputDecoration(labelText: 'Konto'),
-                items: _accounts.map((account) {
-                  return DropdownMenuItem<Account>(
-                    value: account,
-                    child: Text(account.name),
-                  );
-                }).toList(),
-                onChanged: (Account? newValue) {
-                  setState(() {
-                    _selectedAccount = newValue;
-                  });
-                },
-                validator: (value) {
-                  if (value == null) {
-                    return 'Bitte wählen Sie ein Konto aus.';
-                  }
-                  return null;
-                },
-              ),
-              DropdownButtonFormField<Category>(
-                value: _selectedCategory,
-                decoration: const InputDecoration(labelText: 'Kategorie'),
-                items: filteredCategories.map((category) {
-                  return DropdownMenuItem<Category>(
-                    value: category,
-                    child: Text(category.name),
-                  );
-                }).toList(),
-                onChanged: (Category? newValue) {
-                  setState(() {
-                    _selectedCategory = newValue;
-                    if (newValue != null && newValue.defaultAccountId != null) {
-                      _selectedAccount = _accounts.firstWhereOrNull((acc) => acc.id == newValue.defaultAccountId);
+              if (_transactionType != TransactionType.transfer) ...[
+                DropdownButtonFormField<Account>(
+                  value: _selectedAccount,
+                  decoration: const InputDecoration(labelText: 'Konto'),
+                  items: _accounts.map((account) {
+                    return DropdownMenuItem<Account>(
+                      value: account,
+                      child: Text(account.name),
+                    );
+                  }).toList(),
+                  onChanged: (Account? newValue) {
+                    setState(() {
+                      _selectedAccount = newValue;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Bitte wählen Sie ein Konto aus.';
                     }
-                  });
-                },
-                validator: (value) {
-                  if (value == null) {
-                    return 'Bitte wählen Sie eine Kategorie aus.';
-                  }
-                  return null;
-                },
-              ),
+                    return null;
+                  },
+                ),
+                DropdownButtonFormField<Category>(
+                  value: _selectedCategory,
+                  decoration: const InputDecoration(labelText: 'Kategorie'),
+                  items: filteredCategories.map((category) {
+                    return DropdownMenuItem<Category>(
+                      value: category,
+                      child: Text(category.name),
+                    );
+                  }).toList(),
+                  onChanged: (Category? newValue) {
+                    setState(() {
+                      _selectedCategory = newValue;
+                      if (newValue != null && newValue.defaultAccountId != null) {
+                        _selectedAccount = _accounts.firstWhereOrNull((acc) => acc.id == newValue.defaultAccountId);
+                      }
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Bitte wählen Sie eine Kategorie aus.';
+                    }
+                    return null;
+                  },
+                ),
+              ] else ...[
+                DropdownButtonFormField<Account>(
+                  value: _selectedAccount,
+                  decoration: const InputDecoration(labelText: 'Quellkonto'),
+                  items: _accounts.map((account) {
+                    return DropdownMenuItem<Account>(
+                      value: account,
+                      child: Text(account.name),
+                    );
+                  }).toList(),
+                  onChanged: (Account? newValue) {
+                    setState(() {
+                      _selectedAccount = newValue;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Bitte wählen Sie ein Quellkonto aus.';
+                    }
+                    return null;
+                  },
+                ),
+                DropdownButtonFormField<Account>(
+                  value: _targetAccount,
+                  decoration: const InputDecoration(labelText: 'Zielkonto'),
+                  items: _accounts.map((account) {
+                    return DropdownMenuItem<Account>(
+                      value: account,
+                      child: Text(account.name),
+                    );
+                  }).toList(),
+                  onChanged: (Account? newValue) {
+                    setState(() {
+                      _targetAccount = newValue;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Bitte wählen Sie ein Zielkonto aus.';
+                    }
+                    return null;
+                  },
+                ),
+              ],
               const SizedBox(height: 20),
               LayoutBuilder(
                 builder: (context, constraints) {

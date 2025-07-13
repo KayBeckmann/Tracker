@@ -8,6 +8,7 @@ import 'package:tracker/haushaltsbuch/account_model.dart';
 import 'package:tracker/haushaltsbuch/account_service.dart';
 import 'package:tracker/haushaltsbuch/category_model.dart';
 import 'package:tracker/haushaltsbuch/category_service.dart';
+import 'package:tracker/haushaltsbuch/transaction_type.dart';
 
 class HaushaltsbuchPage extends StatefulWidget {
   const HaushaltsbuchPage({super.key});
@@ -113,10 +114,18 @@ class _HaushaltsbuchPageState extends State<HaushaltsbuchPage> with WidgetsBindi
                       final category = _categories.firstWhere(
                           (cat) => cat.id == transaction.categoryId, orElse: () => Category(name: 'Unbekannt', type: CategoryType.expense));
 
+                      String subtitleText;
+                      if (transaction.type == TransactionType.transfer) {
+                        final targetAccount = _accounts.firstWhere(
+                            (acc) => acc.id == transaction.targetAccountId, orElse: () => Account(name: 'Unbekannt', balance: 0.0, includeInForecast: false));
+                        subtitleText = '${transaction.amount.toStringAsFixed(2)} € | ${transaction.date.toLocal().toString().split(' ')[0]} | ${account.name} -> ${targetAccount.name}';
+                      } else {
+                        subtitleText = '${transaction.amount.toStringAsFixed(2)} € | ${transaction.date.toLocal().toString().split(' ')[0]} | ${account.name} | ${category.name}';
+                      }
+
                       return ListTile(
                         title: Text(transaction.description),
-                        subtitle: Text(
-                            '${transaction.amount.toStringAsFixed(2)} € | ${transaction.date.toLocal().toString().split(' ')[0]} | ${account.name} | ${category.name}'),
+                        subtitle: Text(subtitleText),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [

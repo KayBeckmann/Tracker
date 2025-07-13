@@ -1,3 +1,5 @@
+import 'package:tracker/haushaltsbuch/transaction_type.dart';
+
 class Transaction {
   int? id;
   String description;
@@ -5,6 +7,8 @@ class Transaction {
   DateTime date;
   int accountId;
   int categoryId;
+  TransactionType type;
+  int? targetAccountId; // For transfers
 
   Transaction({
     this.id,
@@ -13,6 +17,8 @@ class Transaction {
     required this.date,
     required this.accountId,
     required this.categoryId,
+    this.type = TransactionType.expense, // Default to expense
+    this.targetAccountId,
   });
 
   Map<String, dynamic> toMap() {
@@ -23,6 +29,8 @@ class Transaction {
       'date': date.toIso8601String(),
       'accountId': accountId,
       'categoryId': categoryId,
+      'type': type.index,
+      'targetAccountId': targetAccountId,
     };
   }
 
@@ -34,6 +42,8 @@ class Transaction {
       date: DateTime.parse(map['date']),
       accountId: map['accountId'],
       categoryId: map['categoryId'],
+      type: TransactionType.values[map['type']],
+      targetAccountId: map['targetAccountId'],
     );
   }
 }
