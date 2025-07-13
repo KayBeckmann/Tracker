@@ -5,12 +5,7 @@ import 'package:tracker/models/note.dart';
 import 'package:tracker/services/note_service.dart';
 import 'package:tracker/models/habit.dart';
 import 'package:tracker/services/habit_service.dart';
-import 'package:tracker/main.dart'; // Import main.dart for _HomePageState
-import 'package:tracker/notizen_page.dart'; // Import NotizenPage
-import 'package:tracker/task_edit_page.dart'; // Import TaskEditPage
-import 'package:tracker/main.dart'; // Import main.dart for _HomePageState
-import 'package:tracker/notizen_page.dart'; // Import NotizenPage
-import 'package:tracker/task_edit_page.dart'; // Import TaskEditPage
+import 'package:tracker/notizen_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -163,11 +158,6 @@ class _DashboardPageState extends State<DashboardPage> {
                                     builder: (context) => NotizenPage(selectedTag: tag),
                                   ),
                                 );
-                                // Also switch to the Notizen tab
-                                final homePageState = context.findAncestorStateOfType<_HomePageState>();
-                                homePageState?.setState(() {
-                                  homePageState._selectedIndex = 2; // Index for NotizenPage
-                                });
                               },
                             )).toList(),
                           )
@@ -206,8 +196,8 @@ class _DashboardPageState extends State<DashboardPage> {
                                 children: [
                                   Text('${habit.description} (Level: ${habit.counterLevel}, Streak: ${habit.counterStreak})'),
                                   IconButton(
-                                    icon: Icon(habit.isCheckedOffToday ? Icons.check_box : Icons.check_box_outline_blank),
-                                    onPressed: habit.isCheckedOffToday ? null : () async {
+                                    icon: const Icon(Icons.check_box_outline_blank),
+                                    onPressed: () async {
                                       await _habitService.checkOffHabit(habit.id);
                                       _loadData(); // Reload data to update UI
                                     },

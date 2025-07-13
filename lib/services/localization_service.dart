@@ -1,5 +1,6 @@
-import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 part 'localization_service.g.dart';
 
@@ -41,6 +42,8 @@ class LocaleAdapter extends TypeAdapter<Locale> {
 class LocalizationService {
   static final LocalizationService _instance = LocalizationService._internal();
   late Box<Locale> _localeBox;
+
+  ValueListenable<Box<Locale>> get localeBox => _localeBox.listenable();
 
   factory LocalizationService() {
     return _instance;
