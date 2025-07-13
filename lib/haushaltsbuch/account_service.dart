@@ -25,6 +25,20 @@ class AccountService {
     });
   }
 
+  Future<Account?> getAccountById(int id) async {
+    final db = await dbHelper.database;
+    final maps = await db.query(
+      'accounts',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (maps.isNotEmpty) {
+      return Account.fromMap(maps.first);
+    }
+    return null;
+  }
+
   Future<int> updateAccount(Account account) async {
     final db = await dbHelper.database;
     if (account.isDefault) {
@@ -36,7 +50,7 @@ class AccountService {
       where: 'id = ?',
       whereArgs: [account.id],
     );
-    debugPrint('AccountService: Updated account with ID: ${account.id}, rows affected: $rowsAffected');
+    debugPrint('AccountService: Updated account with ID: ${account.id}, new balance: ${account.balance}, rows affected: $rowsAffected');
     return rowsAffected;
   }
 

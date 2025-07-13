@@ -9,7 +9,9 @@ import 'package:tracker/haushaltsbuch/transaction_template_model.dart';
 import 'package:tracker/haushaltsbuch/transaction_template_service.dart';
 
 class NewTransactionPage extends StatefulWidget {
-  const NewTransactionPage({super.key});
+  final Transaction? transaction;
+
+  const NewTransactionPage({super.key, this.transaction});
 
   @override
   State<NewTransactionPage> createState() => _NewTransactionPageState();
@@ -36,6 +38,11 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
   @override
   void initState() {
     super.initState();
+    if (widget.transaction != null) {
+      _descriptionController.text = widget.transaction!.description;
+      _amountController.text = widget.transaction!.amount.toString();
+      _selectedDate = widget.transaction!.date;
+    }
     _loadData();
   }
 
@@ -44,10 +51,16 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
     _categories = await _categoryService.getCategories();
     _templates = await _templateService.getTemplates();
 
-    // Set default account if available and ensure it's from the loaded list
-    final defaultAccount = await _accountService.getDefaultAccount();
-    if (defaultAccount != null) {
-      _selectedAccount = _accounts.firstWhereOrNull((acc) => acc.id == defaultAccount.id);
+    if (widget.transaction != null) {
+      _selectedAccount = _accounts.firstWhereOrNull((acc) => acc.id == widget.transaction!.accountId);
+      _selectedCategory = _categories.firstWhereOrNull((cat) => cat.id == widget.transaction!.categoryId);
+      _transactionType = _selectedCategory?.type ?? CategoryType.expense;
+    } else {
+      // Set default account if available and ensure it's from the loaded list
+      final defaultAccount = await _accountService.getDefaultAccount();
+      if (defaultAccount != null) {
+        _selectedAccount = _accounts.firstWhereOrNull((acc) => acc.id == defaultAccount.id);
+      }
     }
 
     setState(() {});
@@ -82,15 +95,26 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
         return;
       }
 
-      final newTransaction = Transaction(
-        description: _descriptionController.text,
-        amount: double.parse(_amountController.text),
-        date: _selectedDate,
-        accountId: _selectedAccount!.id!,
-        categoryId: _selectedCategory!.id!,
-      );
-
-      await _transactionService.createTransaction(newTransaction);
+      if (widget.transaction == null) {
+        final newTransaction = Transaction(
+          description: _descriptionController.text,
+          amount: double.parse(_amountController.text),
+          date: _selectedDate,
+          accountId: _selectedAccount!.id!,
+          categoryId: _selectedCategory!.id!,
+        );
+        await _transactionService.createTransaction(newTransaction);
+      } else {
+        final updatedTransaction = Transaction(
+          id: widget.transaction!.id,
+          description: _descriptionController.text,
+          amount: double.parse(_amountController.text),
+          date: _selectedDate,
+          accountId: _selectedAccount!.id!,
+          categoryId: _selectedCategory!.id!,
+        );
+        await _transactionService.updateTransaction(updatedTransaction);
+      }
       Navigator.of(context).pop();
     }
   }
@@ -141,7 +165,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Neue Buchung'),
+        title: Text(widget.transaction == null ? 'Neue Buchung' : 'Buchung bearbeiten'),
         actions: [
           PopupMenuButton<TransactionTemplate>(
             onSelected: _loadTemplate,
@@ -275,22 +299,48 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
                 },
               ),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  ElevatedButton(
-                    onPressed: _saveTransaction,
-                    child: const Text('Buchung speichern'),
-                  ),
-                  ElevatedButton(
-                    onPressed: _saveAsTemplate,
-                    child: const Text('Als Vorlage speichern'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Abbrechen'),
-                  ),
-                ],
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  if (constraints.maxWidth < 600) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        ElevatedButton(
+                          onPressed: _saveTransaction,
+                          child: Text(widget.transaction == null ? 'Buchung speichern' : 'Buchung aktualisieren'),
+                        ),
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed: _saveAsTemplate,
+                          child: const Text('Als Vorlage speichern'),
+                        ),
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Abbrechen'),
+                        ),
+                      ],
+                    );
+                  } else {
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        ElevatedButton(
+                          onPressed: _saveTransaction,
+                          child: Text(widget.transaction == null ? 'Buchung speichern' : 'Buchung aktualisieren'),
+                        ),
+                        ElevatedButton(
+                          onPressed: _saveAsTemplate,
+                          child: const Text('Als Vorlage speichern'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Abbrechen'),
+                        ),
+                      ],
+                    );
+                  }
+                },
               ),
             ],
           ),

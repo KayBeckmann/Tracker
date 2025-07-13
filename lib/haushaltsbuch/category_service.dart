@@ -21,6 +21,20 @@ class CategoryService {
     });
   }
 
+  Future<CategoryModel.Category?> getCategoryById(int id) async {
+    final db = await dbHelper.database;
+    final maps = await db.query(
+      'categories',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (maps.isNotEmpty) {
+      return CategoryModel.Category.fromMap(maps.first);
+    }
+    return null;
+  }
+
   Future<int> updateCategory(CategoryModel.Category category) async {
     final db = await dbHelper.database;
     final rowsAffected = await db.update(

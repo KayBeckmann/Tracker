@@ -16,7 +16,7 @@ class HaushaltsbuchPage extends StatefulWidget {
   State<HaushaltsbuchPage> createState() => _HaushaltsbuchPageState();
 }
 
-class _HaushaltsbuchPageState extends State<HaushaltsbuchPage> {
+class _HaushaltsbuchPageState extends State<HaushaltsbuchPage> with WidgetsBindingObserver {
   final TransactionService _transactionService = TransactionService();
   final AccountService _accountService = AccountService();
   final CategoryService _categoryService = CategoryService();
@@ -27,7 +27,21 @@ class _HaushaltsbuchPageState extends State<HaushaltsbuchPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadData();
+    }
   }
 
   void _loadData() async {
@@ -37,62 +51,94 @@ class _HaushaltsbuchPageState extends State<HaushaltsbuchPage> {
     setState(() {});
   }
 
+  void _navigateToEditTransactionPage([Transaction? transaction]) async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (context) => NewTransactionPage(transaction: transaction)));
+    _loadData(); // Reload data after new transaction is added or edited
+  }
+
   @override
   Widget build(BuildContext context) {
+    double totalBalance = _accounts.fold(0.0, (sum, account) => sum + account.balance);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Haushaltsbuch'),
         actions: [
           IconButton(
             icon: const Icon(Icons.account_balance),
-            onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => const AccountsPage()));
+            onPressed: () async {
+              await Navigator.of(context).push(MaterialPageRoute(builder: (context) => const AccountsPage()));
+              _loadData(); // Reload data after returning from AccountsPage
             },
           ),
           IconButton(
             icon: const Icon(Icons.category),
-            onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => const CategoriesPage()));
+            onPressed: () async {
+              await Navigator.of(context).push(MaterialPageRoute(builder: (context) => const CategoriesPage()));
+              _loadData(); // Reload data after returning from CategoriesPage
             },
           ),
         ],
       ),
-      body: _transactions.isEmpty
-          ? const Center(child: Text('Keine Buchungen vorhanden.'))
-          : ListView.builder(
-              itemCount: _transactions.length,
-              itemBuilder: (context, index) {
-                final transaction = _transactions[index];
-                final account = _accounts.firstWhere(
-                    (acc) => acc.id == transaction.accountId, orElse: () => Account(name: 'Unbekannt', balance: 0.0, includeInForecast: false));
-                final category = _categories.firstWhere(
-                    (cat) => cat.id == transaction.categoryId, orElse: () => Category(name: 'Unbekannt', type: CategoryType.expense));
-
-                return ListTile(
-                  title: Text(transaction.description),
-                  subtitle: Text(
-                      '${transaction.amount.toStringAsFixed(2)} € | ${transaction.date.toLocal().toString().split(' ')[0]} | ${account.name} | ${category.name}'),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () {
-                          // TODO: Implement edit transaction
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () async {
-                          await _transactionService.deleteTransaction(transaction.id!);
-                          _loadData();
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Kontenübersicht',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                ..._accounts.map((account) => Text('${account.name}: ${account.balance.toStringAsFixed(2)} €')),
+                const Divider(),
+                Text(
+                  'Gesamtsaldo: ${totalBalance.toStringAsFixed(2)} €',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
+          ),
+          Expanded(
+            child: _transactions.isEmpty
+                ? const Center(child: Text('Keine Buchungen vorhanden.'))
+                : ListView.builder(
+                    itemCount: _transactions.length,
+                    itemBuilder: (context, index) {
+                      final transaction = _transactions[index];
+                      final account = _accounts.firstWhere(
+                          (acc) => acc.id == transaction.accountId, orElse: () => Account(name: 'Unbekannt', balance: 0.0, includeInForecast: false));
+                      final category = _categories.firstWhere(
+                          (cat) => cat.id == transaction.categoryId, orElse: () => Category(name: 'Unbekannt', type: CategoryType.expense));
+
+                      return ListTile(
+                        title: Text(transaction.description),
+                        subtitle: Text(
+                            '${transaction.amount.toStringAsFixed(2)} € | ${transaction.date.toLocal().toString().split(' ')[0]} | ${account.name} | ${category.name}'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () => _navigateToEditTransactionPage(transaction),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () async {
+                                await _transactionService.deleteTransaction(transaction.id!);
+                                _loadData();
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await Navigator.of(context).push(MaterialPageRoute(builder: (context) => const NewTransactionPage()));
