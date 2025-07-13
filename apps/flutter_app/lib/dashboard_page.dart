@@ -6,6 +6,14 @@ import 'package:tracker/services/note_service.dart';
 import 'package:tracker/models/habit.dart';
 import 'package:tracker/services/habit_service.dart';
 import 'package:tracker/notizen_page.dart';
+import 'package:tracker/haushaltsbuch/account_model.dart';
+import 'package:tracker/haushaltsbuch/account_service.dart';
+import 'package:tracker/haushaltsbuch/transaction_model.dart';
+import 'package:tracker/haushaltsbuch/transaction_service.dart';
+import 'package:tracker/haushaltsbuch/category_model.dart';
+import 'package:tracker/haushaltsbuch/category_service.dart';
+import 'package:tracker/haushaltsbuch/transaction_type.dart';
+import 'package:tracker/haushaltsbuch/new_transaction_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -18,9 +26,16 @@ class _DashboardPageState extends State<DashboardPage> {
   final DatabaseService _dbService = DatabaseService();
   final NoteService _noteService = NoteService();
   final HabitService _habitService = HabitService();
+  final AccountService _accountService = AccountService();
+  final TransactionService _transactionService = TransactionService();
+  final CategoryService _categoryService = CategoryService();
+
   List<Task> _tasks = [];
   List<Note> _notes = [];
   List<Habit> _habits = [];
+  List<Account> _accounts = [];
+  List<Transaction> _transactions = [];
+  List<Category> _categories = [];
 
   @override
   void initState() {
@@ -28,12 +43,19 @@ class _DashboardPageState extends State<DashboardPage> {
     _loadData();
   }
 
-  void _loadData() {
-    setState(() {
-      _tasks = _dbService.getTasks();
-      _notes = _noteService.getNotes();
-      _habits = _habitService.getHabits();
-    });
+  void _loadData() async {
+    _tasks = _dbService.getTasks();
+    _notes = _noteService.getNotes();
+    _habits = _habitService.getHabits();
+    _accounts = await _accountService.getAccounts();
+    _transactions = await _transactionService.getTransactions();
+    _categories = await _categoryService.getCategories();
+    setState(() {});
+  }
+
+  void _navigateToNewTransactionPage() async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (context) => const NewTransactionPage()));
+    _loadData(); // Reload data after new transaction is added
   }
 
   @override
@@ -60,10 +82,86 @@ class _DashboardPageState extends State<DashboardPage> {
       ..sort((a, b) => b.value.compareTo(a.value));
     final top3TagNames = top3Tags.take(3).map((entry) => entry.key).toList();
 
+    double totalBalance = _accounts.fold(0.0, (sum, account) => sum + account.balance);
+    final latestTransactions = _transactions.take(3).toList();
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
+          // Kontenübersicht
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Kontenübersicht',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  ..._accounts.map((account) => Text('${account.name}: ${account.balance.toStringAsFixed(2)} €')),
+                  const Divider(),
+                  Text(
+                    'Gesamtsaldo: ${totalBalance.toStringAsFixed(2)} €',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Letzte Buchungen
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Letzte Buchungen',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  if (latestTransactions.isEmpty)
+                    const Text('Keine Buchungen vorhanden.')
+                  else
+                    ...latestTransactions.map((transaction) {
+                      final account = _accounts.firstWhere(
+                          (acc) => acc.id == transaction.accountId, orElse: () => Account(name: 'Unbekannt', balance: 0.0, includeInForecast: false));
+                      final category = _categories.firstWhere(
+                          (cat) => cat.id == transaction.categoryId, orElse: () => Category(name: 'Unbekannt', type: CategoryType.expense));
+
+                      String subtitleText;
+                      if (transaction.type == TransactionType.transfer) {
+                        final targetAccount = _accounts.firstWhere(
+                            (acc) => acc.id == transaction.targetAccountId, orElse: () => Account(name: 'Unbekannt', balance: 0.0, includeInForecast: false));
+                        subtitleText = '${transaction.amount.toStringAsFixed(2)} € | ${transaction.date.toLocal().toString().split(' ')[0]} | ${account.name} -> ${targetAccount.name}';
+                      } else {
+                        subtitleText = '${transaction.amount.toStringAsFixed(2)} € | ${transaction.date.toLocal().toString().split(' ')[0]} | ${account.name} | ${category.name}';
+                      }
+
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4.0),
+                        child: Text('${transaction.description}: $subtitleText'),
+                      );
+                    }).toList(),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Button für neue Buchung
+          ElevatedButton.icon(
+            onPressed: _navigateToNewTransactionPage,
+            icon: const Icon(Icons.add),
+            label: const Text('Neue Buchung'),
+          ),
+          const SizedBox(height: 16),
+
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -199,7 +297,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                     icon: const Icon(Icons.check_box_outline_blank),
                                     onPressed: () async {
                                       await _habitService.checkOffHabit(habit.id);
-                                      _loadData(); // Reload data to update UI
+                                      _loadData();
                                     },
                                   ),
                                 ],

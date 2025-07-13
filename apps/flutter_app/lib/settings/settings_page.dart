@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tracker/services/theme_service.dart';
 import 'package:tracker/services/localization_service.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+// import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SettingsPage extends StatefulWidget {
   SettingsPage({super.key});
@@ -48,7 +48,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.settings),
+        //        title: Text(AppLocalizations.of(context)!.settings),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -56,7 +56,7 @@ class _SettingsPageState extends State<SettingsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              AppLocalizations.of(context)!.theme,
+              'Theme',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             DropdownButton<AppTheme>(
@@ -79,7 +79,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             const SizedBox(height: 20),
             Text(
-              AppLocalizations.of(context)!.language,
+              'Language',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             DropdownButton<Locale>(
@@ -98,7 +98,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             const SizedBox(height: 20),
             Text(
-              AppLocalizations.of(context)!.backendLogin,
+              'Backend Login',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 10),
@@ -106,10 +106,10 @@ class _SettingsPageState extends State<SettingsPage> {
               onPressed: () {
                 // TODO: Implement backend login logic
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(AppLocalizations.of(context)!.backendLoginMessage)),
+                  SnackBar(content: Text('Backend Login Message')),
                 );
               },
-              child: Text(AppLocalizations.of(context)!.login),
+              child: Text('Login'),
             ),
           ],
         ),

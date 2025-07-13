@@ -1,43 +1,42 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
+# Gitignore for Monorepo
+
+# Flutter App
+apps/flutter_app/.dart_tool/
+apps/flutter_app/build/
+apps/flutter_app/.flutter-plugins
+apps/flutter_app/.flutter-plugins-dependencies
+apps/flutter_app/.idea/
+apps/flutter_app/.metadata
+apps/flutter_app/android/.gradle/
+apps/flutter_app/android/build/
+apps/flutter_app/ios/.symlinks/
+apps/flutter_app/ios/Flutter/.last_build_id
+apps/flutter_app/ios/Flutter/ephemeral/
+apps/flutter_app/ios/Runner.xcworkspace/
+apps/flutter_app/macos/Flutter/ephemeral/
+apps/flutter_app/macos/Runner.xcworkspace/
+apps/flutter_app/linux/flutter/ephemeral/
+apps/flutter_app/windows/flutter/ephemeral/
+
+# Backend
+apps/backend/node_modules/
+apps/backend/npm-debug.log
+
+# Homepage
+# No specific ignores needed for a simple static HTML page yet
+
+# General ignores
 .DS_Store
-.atom/
-.buildlog/
-.history
-.svn/
-migrate_working_dir/
+.env
+.vscode/
+*.log
+*.tmp
+*.bak
 
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
+# IDE-specific ignores
 .idea/
+.vscode/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.pub-cache/
-.pub/
-/build/
-
-# Symbolication related
-app.*.symbols
-
-# Obfuscation related
-app.*.map.json
-
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+# OS-specific ignores
+.DS_Store
+thumbs.db

@@ -18,7 +18,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:tracker/hive_adapters.dart';
 import 'package:tracker/services/theme_service.dart';
 import 'package:tracker/services/localization_service.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+// import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:tracker/settings/settings_page.dart';
 
 void main() async {
@@ -68,8 +68,8 @@ class _MyAppState extends State<MyApp> {
                   ? ThemeMode.system
                   : (currentTheme == AppTheme.light ? ThemeMode.light : ThemeMode.dark),
               locale: currentLocale,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
+              //              localizationsDelegates: AppLocalizations.localizationsDelegates,
+//              supportedLocales: AppLocalizations.supportedLocales,
               home: const HomePage(),
             );
           },
