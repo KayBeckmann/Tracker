@@ -19,11 +19,11 @@ class DatabaseHelper {
     final path = join(dbPath, 'haushaltsbuch.db');
 
     // Temporäre Lösung für die Entwicklung: Löscht die Datenbank bei jedem Start
-    await deleteDatabase(path);
+    // await deleteDatabase(path);
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -35,7 +35,8 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         balance REAL NOT NULL,
-        includeInForecast INTEGER NOT NULL
+        includeInForecast INTEGER NOT NULL,
+        isDefault INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -64,6 +65,9 @@ class DatabaseHelper {
     if (oldVersion < 2) {
       await db.execute('ALTER TABLE accounts ADD COLUMN balance REAL NOT NULL DEFAULT 0.0');
       await db.execute('ALTER TABLE accounts ADD COLUMN includeInForecast INTEGER NOT NULL DEFAULT 1');
+    }
+    if (oldVersion < 3) {
+      await db.execute('ALTER TABLE accounts ADD COLUMN isDefault INTEGER NOT NULL DEFAULT 0');
     }
   }
 }

@@ -3,12 +3,14 @@ class Account {
   String name;
   double balance;
   bool includeInForecast;
+  bool isDefault;
 
   Account({
     this.id,
     required this.name,
     required this.balance,
     required this.includeInForecast,
+    this.isDefault = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -17,6 +19,7 @@ class Account {
       'name': name,
       'balance': balance,
       'includeInForecast': includeInForecast ? 1 : 0,
+      'isDefault': isDefault ? 1 : 0,
     };
   }
 
@@ -26,6 +29,7 @@ class Account {
       name: map['name'],
       balance: map['balance'],
       includeInForecast: map['includeInForecast'] == 1,
+      isDefault: map['isDefault'] == 1,
     );
   }
 }

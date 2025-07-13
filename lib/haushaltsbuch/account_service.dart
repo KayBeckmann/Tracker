@@ -1,12 +1,16 @@
 import 'package:tracker/database/database_helper.dart';
 import 'package:tracker/haushaltsbuch/account_model.dart';
 import 'package:flutter/foundation.dart'; // Import for debugPrint
+import 'package:sqflite/sqflite.dart'; // Import for Database type
 
 class AccountService {
   final dbHelper = DatabaseHelper();
 
   Future<int> createAccount(Account account) async {
     final db = await dbHelper.database;
+    if (account.isDefault) {
+      await _clearDefaultAccount(db);
+    }
     final id = await db.insert('accounts', account.toMap());
     debugPrint('AccountService: Created account with ID: $id');
     return id;
@@ -23,6 +27,9 @@ class AccountService {
 
   Future<int> updateAccount(Account account) async {
     final db = await dbHelper.database;
+    if (account.isDefault) {
+      await _clearDefaultAccount(db);
+    }
     final rowsAffected = await db.update(
       'accounts',
       account.toMap(),
@@ -42,5 +49,28 @@ class AccountService {
     );
     debugPrint('AccountService: Deleted account with ID: $id, rows affected: $rowsAffected');
     return rowsAffected;
+  }
+
+  Future<void> _clearDefaultAccount(Database db) async {
+    await db.update(
+      'accounts',
+      {'isDefault': 0},
+      where: 'isDefault = ?',
+      whereArgs: [1],
+    );
+  }
+
+  Future<Account?> getDefaultAccount() async {
+    final db = await dbHelper.database;
+    final maps = await db.query(
+      'accounts',
+      where: 'isDefault = ?',
+      whereArgs: [1],
+      limit: 1,
+    );
+    if (maps.isNotEmpty) {
+      return Account.fromMap(maps.first);
+    }
+    return null;
   }
 }

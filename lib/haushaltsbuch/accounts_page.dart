@@ -32,6 +32,7 @@ class _AccountsPageState extends State<AccountsPage> {
     final nameController = TextEditingController(text: account?.name);
     final balanceController = TextEditingController(text: account?.balance.toString());
     bool includeInForecast = account?.includeInForecast ?? true;
+    bool isDefault = account?.isDefault ?? false;
 
     showDialog(
       context: context,
@@ -53,21 +54,34 @@ class _AccountsPageState extends State<AccountsPage> {
                     return null;
                   },
                 ),
-                TextField(
+                TextFormField(
                   controller: balanceController,
                   decoration: const InputDecoration(labelText: 'Startbetrag'),
                   keyboardType: TextInputType.number,
                 ),
                 StatefulBuilder(
                   builder: (context, setState) {
-                    return CheckboxListTile(
-                      title: const Text('In Prognose einbeziehen'),
-                      value: includeInForecast,
-                      onChanged: (bool? value) {
-                        setState(() {
-                          includeInForecast = value!;
-                        });
-                      },
+                    return Column(
+                      children: [
+                        CheckboxListTile(
+                          title: const Text('In Prognose einbeziehen'),
+                          value: includeInForecast,
+                          onChanged: (bool? value) {
+                            setState(() {
+                              includeInForecast = value!;
+                            });
+                          },
+                        ),
+                        CheckboxListTile(
+                          title: const Text('Als Standardkonto festlegen'),
+                          value: isDefault,
+                          onChanged: (bool? value) {
+                            setState(() {
+                              isDefault = value!;
+                            });
+                          },
+                        ),
+                      ],
                     );
                   },
                 ),
@@ -91,6 +105,7 @@ class _AccountsPageState extends State<AccountsPage> {
                       name: name,
                       balance: balance,
                       includeInForecast: includeInForecast,
+                      isDefault: isDefault,
                     );
                     await _accountService.updateAccount(updatedAccount);
                   } else {
@@ -98,6 +113,7 @@ class _AccountsPageState extends State<AccountsPage> {
                       name: name,
                       balance: balance,
                       includeInForecast: includeInForecast,
+                      isDefault: isDefault,
                     );
                     await _accountService.createAccount(newAccount);
                   }
@@ -125,7 +141,7 @@ class _AccountsPageState extends State<AccountsPage> {
           final account = _accounts[index];
           return ListTile(
             title: Text(account.name),
-            subtitle: Text('Betrag: ${account.balance.toStringAsFixed(2)} | Prognose: ${account.includeInForecast ? 'Ja' : 'Nein'}'),
+            subtitle: Text('Betrag: ${account.balance.toStringAsFixed(2)} | Prognose: ${account.includeInForecast ? 'Ja' : 'Nein'} | Standard: ${account.isDefault ? 'Ja' : 'Nein'}'),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
